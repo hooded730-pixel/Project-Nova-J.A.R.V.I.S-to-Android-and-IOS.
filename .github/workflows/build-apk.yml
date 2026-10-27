@@ -1,0 +1,274 @@
+name: Gerar APK da Nova
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Montar o projeto Android
+        run: |
+          mkdir -p $(dirname settings.gradle)
+          cat > settings.gradle <<'EOF'
+          pluginManagement{repositories{google();mavenCentral();gradlePluginPortal()}}
+          dependencyResolutionManagement{repositories{google();mavenCentral()}}
+          rootProject.name='Nova'
+          include ':app'
+          EOF
+          mkdir -p $(dirname build.gradle)
+          cat > build.gradle <<'EOF'
+          plugins{id 'com.android.application' version '8.5.2' apply false}
+          EOF
+          mkdir -p $(dirname gradle.properties)
+          cat > gradle.properties <<'EOF'
+          android.useAndroidX=true
+          org.gradle.jvmargs=-Xmx2g
+          EOF
+          mkdir -p $(dirname app/build.gradle)
+          cat > app/build.gradle <<'EOF'
+          plugins{id 'com.android.application'}
+          android{
+            namespace 'com.nova.assistant'
+            compileSdk 34
+            defaultConfig{applicationId 'com.nova.assistant';minSdk 24;targetSdk 34;versionCode 1;versionName '1.0'}
+            compileOptions{sourceCompatibility JavaVersion.VERSION_17;targetCompatibility JavaVersion.VERSION_17}
+          }
+          dependencies{implementation 'androidx.webkit:webkit:1.11.0'}
+          EOF
+          mkdir -p $(dirname app/src/main/AndroidManifest.xml)
+          cat > app/src/main/AndroidManifest.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            <uses-permission android:name="android.permission.INTERNET"/>
+            <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+            <queries><intent><action android:name="android.speech.RecognitionService"/></intent></queries>
+            <application android:label="Nova" android:icon="@mipmap/ic_launcher" android:theme="@android:style/Theme.DeviceDefault.NoActionBar" android:allowBackup="true">
+              <activity android:name=".MainActivity" android:exported="true" android:windowSoftInputMode="adjustResize" android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|smallestScreenSize|uiMode">
+                <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+              </activity>
+            </application>
+          </manifest>
+          EOF
+          mkdir -p $(dirname app/src/main/res/values/colors.xml)
+          cat > app/src/main/res/values/colors.xml <<'EOF'
+          <resources><color name="nova_bg">#020407</color></resources>
+          EOF
+          mkdir -p $(dirname app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml)
+          cat > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml <<'EOF'
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@color/nova_bg"/><foreground android:drawable="@drawable/ic_foreground"/></adaptive-icon>
+          EOF
+          mkdir -p $(dirname app/src/main/java/com/nova/assistant/MainActivity.java)
+          cat > app/src/main/java/com/nova/assistant/MainActivity.java <<'EOF'
+          package com.nova.assistant;
+
+          import android.Manifest;
+          import android.app.Activity;
+          import android.content.Intent;
+          import android.content.pm.PackageManager;
+          import android.graphics.Color;
+          import android.os.Bundle;
+          import android.speech.RecognitionListener;
+          import android.speech.RecognizerIntent;
+          import android.speech.SpeechRecognizer;
+          import android.speech.tts.TextToSpeech;
+          import android.speech.tts.UtteranceProgressListener;
+          import android.view.WindowManager;
+          import android.webkit.JavascriptInterface;
+          import android.webkit.WebResourceRequest;
+          import android.webkit.WebResourceResponse;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+          import androidx.webkit.WebViewAssetLoader;
+          import java.util.ArrayList;
+          import java.util.Locale;
+          import org.json.JSONObject;
+
+          public class MainActivity extends Activity {
+              WebView web;
+              SpeechRecognizer sr;
+              TextToSpeech tts;
+              boolean ttsOk = false;
+              String pendT, pendId;
+
+              void js(final String s) {
+                  runOnUiThread(() -> web.evaluateJavascript("try{" + s + "}catch(e){}", null));
+              }
+
+              void ev(String k, String id) {
+                  js("__nv.tts&&__nv.tts('" + k + "','" + id + "')");
+              }
+
+              class Bridge {
+                  @JavascriptInterface public void start() { runOnUiThread(() -> listen()); }
+                  @JavascriptInterface public void stop() { runOnUiThread(() -> { if (sr != null) sr.cancel(); }); }
+                  @JavascriptInterface public void speak(String t, String id) { runOnUiThread(() -> say(t, id)); }
+                  @JavascriptInterface public void stopSpeak() { runOnUiThread(() -> { if (tts != null) tts.stop(); }); }
+                  @JavascriptInterface public void keepOn(boolean on) {
+                      runOnUiThread(() -> {
+                          if (on) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                          else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                      });
+                  }
+              }
+
+              @Override
+              protected void onCreate(Bundle b) {
+                  super.onCreate(b);
+                  getWindow().setStatusBarColor(Color.parseColor("#020407"));
+                  getWindow().setNavigationBarColor(Color.parseColor("#020407"));
+                  web = new WebView(this);
+                  web.setBackgroundColor(Color.parseColor("#020407"));
+                  setContentView(web);
+                  WebSettings st = web.getSettings();
+                  st.setJavaScriptEnabled(true);
+                  st.setDomStorageEnabled(true);
+                  st.setMediaPlaybackRequiresUserGesture(false);
+                  final WebViewAssetLoader loader = new WebViewAssetLoader.Builder()
+                          .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this)).build();
+                  web.setWebViewClient(new WebViewClient() {
+                      @Override
+                      public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) {
+                          return loader.shouldInterceptRequest(r.getUrl());
+                      }
+                  });
+                  web.addJavascriptInterface(new Bridge(), "NovaVoice");
+                  tts = new TextToSpeech(this, status -> {
+                      if (status != TextToSpeech.SUCCESS) return;
+                      tts.setLanguage(new Locale("pt", "BR"));
+                      tts.setPitch(0.8f);
+                      tts.setSpeechRate(0.95f);
+                      tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                          @Override public void onStart(String id) { ev("start", id); }
+                          @Override public void onDone(String id) { ev("end", id); }
+                          @Override public void onError(String id) { ev("end", id); }
+                          @Override public void onStop(String id, boolean interrupted) { ev("end", id); }
+                      });
+                      ttsOk = true;
+                      if (pendT != null) { say(pendT, pendId); pendT = null; }
+                  });
+                  web.loadUrl("https://appassets.androidplatform.net/assets/index.html");
+              }
+
+              void say(String t, String id) {
+                  if (!ttsOk) { pendT = t; pendId = id; return; }
+                  tts.speak(t, TextToSpeech.QUEUE_FLUSH, null, id);
+              }
+
+              String best(Bundle b) {
+                  ArrayList<String> l = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                  return (l != null && !l.isEmpty()) ? l.get(0) : "";
+              }
+
+              void listen() {
+                  if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                      requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, 1);
+                      return;
+                  }
+                  if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+                      js("__nv.err('service-not-allowed');__nv.end()");
+                      return;
+                  }
+                  if (sr == null) {
+                      sr = SpeechRecognizer.createSpeechRecognizer(this);
+                      sr.setRecognitionListener(new RecognitionListener() {
+                          public void onReadyForSpeech(Bundle p) {}
+                          public void onBeginningOfSpeech() {}
+                          public void onRmsChanged(float v) {}
+                          public void onBufferReceived(byte[] b) {}
+                          public void onEndOfSpeech() {}
+                          public void onEvent(int t, Bundle p) {}
+                          public void onPartialResults(Bundle b) {
+                              String t = best(b);
+                              if (!t.isEmpty()) js("__nv.res(" + JSONObject.quote(t) + ",false)");
+                          }
+                          public void onResults(Bundle b) {
+                              js("__nv.res(" + JSONObject.quote(best(b)) + ",true);__nv.end()");
+                          }
+                          public void onError(int e) {
+                              String c = (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) ? "no-speech"
+                                      : (e == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS) ? "not-allowed"
+                                      : (e == SpeechRecognizer.ERROR_CLIENT || e == SpeechRecognizer.ERROR_RECOGNIZER_BUSY) ? "aborted"
+                                      : "network";
+                              js("__nv.err('" + c + "');__nv.end()");
+                          }
+                      });
+                  }
+                  Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                  i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                  i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "pt-BR");
+                  i.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+                  sr.startListening(i);
+              }
+
+              @Override
+              public void onRequestPermissionsResult(int code, String[] perms, int[] res) {
+                  super.onRequestPermissionsResult(code, perms, res);
+                  if (code != 1) return;
+                  if (res.length > 0 && res[0] == PackageManager.PERMISSION_GRANTED) listen();
+                  else js("__nv.err('not-allowed');__nv.end()");
+              }
+
+              @Override
+              protected void onDestroy() {
+                  if (sr != null) sr.destroy();
+                  if (tts != null) tts.shutdown();
+                  web.destroy();
+                  super.onDestroy();
+              }
+          }
+          EOF
+          mkdir -p app/src/main/assets
+          cp index.html app/src/main/assets/index.html
+          curl -fL -o app/src/main/assets/three.min.js https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js
+          sed -i 's#https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js#three.min.js#' app/src/main/assets/index.html
+          pip install --quiet pillow
+          python3 - <<'PY'
+          import random,math,os
+          from PIL import Image,ImageDraw,ImageFilter,ImageChops
+          def icon(sz,R):
+              random.seed(7);c=sz/2
+              g=Image.new('RGB',(sz,sz),(0,0,0));dg=ImageDraw.Draw(g)
+              for i in range(170):
+                  a=random.random()*6.2832;L=R*(.95+random.random()*.22);w=max(2,int(sz*(.004+random.random()*.008)))
+                  col=random.choice([(255,90,10),(255,140,20),(255,190,50),(220,40,5)])
+                  dg.line([c+math.cos(a)*R*.3,c+math.sin(a)*R*.3,c+math.cos(a)*L,c+math.sin(a)*L],fill=col,width=w)
+              g=g.filter(ImageFilter.GaussianBlur(sz*.004))
+              im=Image.new('RGB',(sz,sz),(2,4,7));im.paste(g,(0,0),g.convert('L').point(lambda v:255 if v>8 else 0))
+              gl=Image.new('RGB',(sz,sz),(0,0,0));ImageDraw.Draw(gl).ellipse([c-R*1.1,c-R*1.1,c+R*1.1,c+R*1.1],fill=(90,25,0))
+              im=ImageChops.add(im,gl.filter(ImageFilter.GaussianBlur(sz*.06)))
+              dr=ImageDraw.Draw(im)
+              for i in range(50,0,-1):
+                  k=i/50;r=R*.82*k
+                  dr.ellipse([c-r,c-r,c+r,c+r],fill=(int(255*min(1,.4+(1-k)*1.3)),int(30+(1-k)**1.5*210),int(5+(1-k)**3*90)))
+              dr.ellipse([c-R*.11,c-R*.55,c+R*.11,c+R*.55],fill=(0,0,0))
+              dr.ellipse([c-R*.045,c-R*.38,c+R*.01,c-R*.2],fill=(255,240,215))
+              return im
+          big=icon(512,512*.5*.8)
+          for n,s in [('m',48),('h',72),('xh',96),('xxh',144),('xxxh',192)]:
+              d='app/src/main/res/mipmap-%sdpi'%n;os.makedirs(d,exist_ok=True);big.resize((s,s),Image.LANCZOS).save(d+'/ic_launcher.png')
+          os.makedirs('app/src/main/res/drawable-nodpi',exist_ok=True)
+          icon(432,432*.5*.5).save('app/src/main/res/drawable-nodpi/ic_foreground.png')
+          PY
+      - name: Compilar o APK
+        run: |
+          gradle assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk Nova.apk
+      - name: Publicar em Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nova-${{ github.run_number }}
+          name: Nova ${{ github.run_number }}
+          files: Nova.apk
+          
