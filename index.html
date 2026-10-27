@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-BR" translate="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#020407">
+<title>Nova</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Nova">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+@property --ac{syntax:'<color>';inherits:true;initial-value:#35d0ff}
+:root{--ac:#35d0ff;--tx:#e8f4ff;--pn:#0c131d;--ln:#ffffff1c;transition:--ac .6s}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html{background:#020407}
+html,body{height:100%;color:var(--tx);font:400 16px/1.5 system-ui,'Segoe UI',Roboto,sans-serif;overflow:hidden;overscroll-behavior:none;touch-action:manipulation}
+body{background:radial-gradient(ellipse 80% 45% at 50% 22%,color-mix(in srgb,var(--ac) 13%,transparent),transparent)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+#app{height:100%;display:flex}
+#sb{position:fixed;inset:0 auto 0 0;z-index:20;width:min(300px,84vw);display:flex;flex-direction:column;gap:10px;padding:calc(env(safe-area-inset-top) + 14px) 12px calc(env(safe-area-inset-bottom) + 12px);background:#070b11;border-right:1px solid var(--ln);transform:translateX(-102%);transition:transform .25s}
+#sb.o{transform:none}
+#sb h3{font-weight:300;font-size:20px;letter-spacing:.12em;padding:4px 6px}
+#ov{position:fixed;inset:0;z-index:15;background:#000a;display:none}
+#ov.o{display:block}
+#nc{height:46px;border-radius:14px;border:1px solid var(--ac);color:var(--ac);font-weight:600}
+#ls{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.ci{display:flex;align-items:center;border-radius:12px;padding-left:12px;border:1px solid transparent}
+.ci.a{background:var(--pn);border-color:var(--ln)}
+.ci .t{flex:1;min-width:0;text-align:left;padding:9px 0}
+.ci span,.ci small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ci small{opacity:.5;font-size:12px}
+.ci .x{width:38px;height:38px;opacity:.45}
+#main{flex:1;min-width:0;max-width:760px;margin:0 auto;height:100%;display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top) + 6px) 14px calc(env(safe-area-inset-bottom) + 12px)}
+header{display:flex;align-items:center;gap:10px;padding:6px 0}
+#hd{flex:1;min-width:0}
+#nm{font-weight:300;font-size:22px;letter-spacing:.22em;line-height:1.15}
+#st{font-size:13px;color:var(--ac)}
+.ib{width:42px;height:42px;flex:none;border-radius:50%;border:1px solid var(--ln);display:grid;place-items:center;font-size:18px}
+.ib svg{width:20px;height:20px}
+#eye{flex:none;width:min(88vw,42svh);aspect-ratio:1;margin:6px auto;position:relative;border-radius:50%;box-shadow:0 0 70px -12px var(--ac);transition:width .5s;cursor:pointer}
+.has #eye{width:min(56vw,24svh)}
+#fb{position:absolute;inset:0;width:100%;height:100%;border-radius:50%}
+#c{position:absolute;left:-18%;top:-18%;width:136%;height:136%;mix-blend-mode:screen;pointer-events:none}
+header,#log,#bar{position:relative;z-index:1}
+#fb{display:none;background:radial-gradient(circle,#000 0 8%,#ffb000 14%,#ff4a00 40%,#600 62%,#000 72%);animation:p 2s ease-in-out infinite alternate}
+@keyframes p{to{opacity:.6;transform:scale(.96)}}
+#log{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:8px 2px;min-height:0;scrollbar-width:none}
+#log>:first-child{margin-top:auto}
+.m{max-width:88%;padding:9px 13px;border-radius:18px;background:var(--pn);border:1px solid var(--ln);white-space:pre-wrap;overflow-wrap:anywhere}
+.u{align-self:flex-end;border-color:color-mix(in srgb,var(--ac) 65%,transparent);border-bottom-right-radius:6px}
+.a{border-bottom-left-radius:6px}
+.e{border-color:#ff6b6b88;color:#ffc2c2}
+.m img{display:block;max-width:100%;border-radius:12px;margin-top:6px}
+#bar{display:flex;gap:8px;align-items:center;margin-top:8px}
+#tx{flex:1;min-width:0;height:48px;border-radius:24px;border:1px solid var(--ln);background:var(--pn);color:var(--tx);padding:0 18px;font:inherit;outline:0}
+#tx:focus{border-color:var(--ac)}
+#ct{height:40px;padding:0 12px;border-radius:20px;border:1px solid var(--ln);font-size:13px;opacity:.7}
+#ct.on{border-color:var(--ac);color:var(--ac);opacity:1}
+#mic{width:58px;height:58px;flex:none;border-radius:50%;border:2px solid var(--ac);display:grid;place-items:center;transition:background .3s,border-color .4s}
+#mic.on{background:var(--ac);color:#000}
+#mic svg{width:24px;height:24px;fill:currentColor;stroke:none}
+#pn{position:fixed;inset:0;z-index:30;background:#000c;display:none;padding:calc(env(safe-area-inset-top) + 16px) 14px 14px;overflow:auto}
+#pn.o{display:flex}
+.cd{width:min(440px,100%);margin:auto;background:#091019;border:1px solid var(--ln);border-radius:22px;padding:18px}
+.cd h2{font-weight:400;font-size:20px;display:flex;justify-content:space-between;align-items:center}
+.cd label{display:block;margin:14px 0 5px;font-size:14px;opacity:.75}
+.cd input:not([type=checkbox]){width:100%;height:46px;border-radius:12px;border:1px solid var(--ln);background:var(--pn);color:var(--tx);padding:0 14px;font:inherit}
+.cd p{font-size:13px;opacity:.6;margin-top:6px}
+.sw{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+.sw label{margin:0;font-size:16px;opacity:1}
+.sw input{width:22px;height:22px;accent-color:var(--ac)}
+.cd .b{width:100%;height:48px;border-radius:24px;margin-top:12px;border:1px solid var(--ac);color:var(--ac);font-weight:600}
+.cd .b.p{background:var(--ac);color:#000;margin-top:20px}
+#tm{min-height:1.4em;font-size:14px;margin-top:10px;overflow-wrap:anywhere}
+@media(min-width:900px) and (min-height:560px){#sb{position:static;transform:none;flex:none}#ov,#mn{display:none!important}}
+@media(orientation:landscape) and (max-height:520px){
+ #main{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr auto;gap:0 12px;max-width:none}
+ header{grid-column:1/3}#eye,.has #eye{grid-row:2/4;width:min(40vw,64svh);align-self:center}
+ #log,#bar{grid-column:2}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="ov"></div>
+  <aside id="sb" aria-label="Conversas">
+    <h3>Conversas</h3>
+    <button id="nc">+ Novo chat</button>
+    <div id="ls"></div>
+  </aside>
+  <div id="main">
+    <header>
+      <button class="ib" id="mn" aria-label="Abrir conversas"><svg viewBox="0 0 24 24"><path d="M7 5v14M12 5v14M17 5v14"/></svg></button>
+      <div id="hd"><div id="nm">Nova</div><div id="st">Em espera</div></div>
+      <button class="ib" id="cfg" aria-label="Configurações">⚙</button>
+    </header>
+    <div id="eye" role="button" aria-label="Tocar para interromper a fala"><canvas id="c"></canvas><div id="fb"></div></div>
+    <div id="log" aria-live="polite"></div>
+    <div id="bar">
+      <input id="tx" placeholder="Mensagem" enterkeyhint="send" autocomplete="off">
+      <button id="ct" aria-pressed="false">Contínuo</button>
+      <button id="mic" aria-label="Falar"><svg viewBox="0 0 24 24"><path d="M12 15a4 4 0 0 0 4-4V6a4 4 0 0 0-8 0v5a4 4 0 0 0 4 4zm6-4a6 6 0 0 1-12 0H4a8 8 0 0 0 7 7.9V22h2v-3.1A8 8 0 0 0 20 11z"/></svg></button>
+    </div>
+  </div>
+</div>
+<div id="pn"><div class="cd">
+  <h2>Configurações <button class="ib" id="xx" aria-label="Fechar">✕</button></h2>
+  <label for="k">Chave da API do Gemini</label>
+  <input id="k" type="password" autocomplete="off" placeholder="Cole a chave do Google AI Studio">
+  <p>A chave fica salva só neste aparelho.</p>
+  <label for="n">Nome do assistente</label><input id="n">
+  <label for="mc">Modelo de conversa</label><input id="mc">
+  <label for="mi">Modelo de imagem</label><input id="mi" placeholder="Automático">
+  <div class="sw"><label for="kc">Conversa contínua (ouve de novo após responder)</label><input id="kc" type="checkbox"></div>
+  <div class="sw"><label for="kt">Falar as respostas</label><input id="kt" type="checkbox"></div>
+  <button class="b" id="tt">Testar conexão</button>
+  <div id="tm" aria-live="polite"></div>
+  <button class="b p" id="sv">Salvar</button>
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const S={key:ls.get('k')||'',name:ls.get('n')||'Nova',mc:ls.get('mc')||'gemini-3.1-flash-lite',mi:ls.get('mi')||'',ct:ls.get('ct')==='1',tt:ls.get('tt')!=='0'};
+let state='idle';
+if(/^gemini-2\./.test(S.mc)){S.mc='gemini-3.1-flash-lite';ls.set('mc',S.mc);}   // modelos 2.x foram desativados
+if(/^gemini-2\./.test(S.mi)){S.mi='';ls.set('mi','');}
+
+/* ---------- Olho em chamas (Three.js: fibras, chamas soltas, pupila em fenda, brasas) ---------- */
+const ST={
+ idle:{c:[.55,.04,0, 1,.35,.02, 1,.85,.4, .2,.8,1],p:.3,l:.05},
+ listening:{c:[.7,.1,0, 1,.55,.05, 1,.95,.6, .3,1,.6],p:.9,l:.25},
+ thinking:{c:[.35,.02,.5, .9,.15,.6, 1,.7,.9, .7,.5,1],p:0,l:.18},
+ speaking:{c:[.8,.15,0, 1,.6,.05, 1,1,.85, 1,.7,.2],p:.5,l:.4}};
+const LAB={idle:'Em espera',listening:'Ouvindo…',thinking:'Pensando…',speaking:'Falando…'};
+const HEX={idle:'#35d0ff',listening:'#4dff99',thinking:'#b380ff',speaking:'#ffb333'};
+const VS='varying vec2 vU;void main(){vU=uv;gl_Position=vec4(position.xy,0.,1.);}';
+const FS=`uniform float uT,uL,uP,uK;uniform vec3 uA,uB,uC,uH;varying vec2 vU;
+float h(vec2 p){vec3 q=fract(vec3(p.xyx)*.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}
+float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
+void main(){
+vec2 p=(vU*2.-1.)*1.52;
+float t=uT,r=length(p),a=atan(p.y,p.x);
+vec2 d=vec2(cos(a),sin(a));
+float sp=.5+uL*1.6;
+float lump=n(d*4.+vec2(t*.12,2.))*.6+n(d*9.-vec2(t*.3,0.))*.4;
+float tip=pow(n(d*20.+vec2(t*.6,5.)),2.2)*(.3+uL*.5);
+float e=.55+uL*.1+(lump-.5)*.22+tip;
+float f1=n(d*8.+vec2(0.,1.7)*(r*1.1-t*.45*sp));
+float f2=n(d*24.+vec2(3.1,0.)*(r*2.-t*.8*sp));
+float f3=n(d*64.+vec2(7.3,2.)*(r*2.6-t*1.3*sp));
+float f=f1*.4+f2*.35+f3*.25;
+float body=smoothstep(e+.05,e-.1,r);
+float heat=clamp(f*1.3+(1.-r/e)*1.15-.22,0.,1.)*body;
+vec3 c=mix(uA,uB,smoothstep(0.,.45,heat));
+c=mix(c,uC,smoothstep(.45,1.,heat));
+c*=body*(.55+1.1*heat+uL*.7);
+float lick=smoothstep(.5,.85,f2*.55+f3*.65)*smoothstep(e+.2+tip*.8,e,r)*(1.-body);
+c+=mix(uB,uC,f3)*lick*(.8+uL);
+c+=uA*.4*exp(-max(r-e,0.)*5.)*(1.-body)*(.6+uL);
+vec2 q=p-vec2(sin(t*.6),cos(t*.43))*.02;
+float sw=.035+uP*.09;
+float pd=length(vec2(q.x/sw,q.y/.42));
+float pj=(n(d*14.+t*.7)-.5)*.12;
+float pup=smoothstep(1.+pj,.7+pj,pd);
+c+=uC*.9*exp(-max(pd-1.,0.)*5.)*(1.-pup)*body;
+c=mix(c,vec3(0.),pup);
+c+=vec3(1.,.95,.85)*smoothstep(.05,0.,length((q-vec2(-.012,.17))*vec2(2.4,.6)))*.6*pup;
+float tk=step(.5,fract(a*18./3.14159+t*.04));
+float r1=smoothstep(.012,0.,abs(r-.96))*(.3+.7*tk);
+float sg=step(.55,fract(a/6.2832*3.-t*.08));
+float r2=smoothstep(.016,0.,abs(r-1.06))*(.25+.75*sg);
+c+=uH*(r1*.8+r2)*(.5+uL);
+float lid=1.-uK;
+c*=1.-smoothstep(0.,.08,uK)*smoothstep(lid*.6-.03,lid*.6+.03,abs(p.y));
+c*=smoothstep(1.5,1.05,r);
+c=1.-exp(-c*1.5);
+gl_FragColor=vec4(c,1.);}`;
+const PV=`attribute vec3 s;uniform float uT,uL,uS;varying float v;
+void main(){
+float life=fract(s.z+uT*(.05+s.y*.09)*(1.+uL*2.));
+float ang=s.x+life*.8*(s.y-.5);
+float rad=.3+life*.6+s.y*.05;
+vec2 pos=vec2(cos(ang),sin(ang))*rad;pos.y+=life*life*.1;
+v=1.-life;
+gl_Position=vec4(pos,0.,1.);
+gl_PointSize=(2.+s.y*5.)*v*uS*(1.+uL);}`;
+const PF=`uniform vec3 uB,uC;varying float v;
+void main(){float d=length(gl_PointCoord-.5);float a=smoothstep(.5,0.,d);gl_FragColor=vec4(mix(uB,uC,v)*a*v*1.8,1.);}`;
+const cv=$('#c');
+let cur_=ST.idle.c.slice(),cp=.3,lvl=0;
+function noGL(){cv.style.display='none';$('#fb').style.display='block';}
+if(!window.THREE)noGL();else try{
+  const rdr=new THREE.WebGLRenderer({canvas:cv,antialias:false,alpha:false,powerPreference:'low-power'});
+  rdr.setClearColor(0x000000,1);
+  const sc=new THREE.Scene(),cam=new THREE.OrthographicCamera(-1,1,1,-1,0,1),V=()=>({value:new THREE.Vector3()});
+  const uni={uT:{value:0},uL:{value:0},uP:{value:.3},uK:{value:0},uS:{value:1},uA:V(),uB:V(),uC:V(),uH:V()};
+  const mk=(vs,fs,o)=>new THREE.ShaderMaterial(Object.assign({uniforms:uni,vertexShader:vs,fragmentShader:fs,depthTest:false,depthWrite:false},o));
+  sc.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),mk(VS,FS)));
+  const N=260,g=new THREE.BufferGeometry(),sd=new Float32Array(N*3);
+  for(let i=0;i<N;i++){sd[i*3]=Math.random()*6.2832;sd[i*3+1]=Math.random();sd[i*3+2]=Math.random();}
+  g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(N*3),3));g.setAttribute('s',new THREE.BufferAttribute(sd,3));
+  const pts=new THREE.Points(g,mk(PV,PF,{transparent:true,blending:THREE.AdditiveBlending}));pts.frustumCulled=false;sc.add(pts);
+  let pr=Math.min(window.devicePixelRatio||1,1.25);
+  const fit=()=>{const w=cv.clientWidth||300;rdr.setPixelRatio(pr);rdr.setSize(w,w,false);uni.uS.value=pr*w/400;};
+  fit();if(window.ResizeObserver)new ResizeObserver(fit).observe($('#eye'));
+  let last=0,acc=0,cnt=0,t0=performance.now(),nb=2500,bs=0;
+  const frame=now=>{
+    requestAnimationFrame(frame);
+    if(document.hidden)return;
+    const dt=now-last;if(dt<12)return;last=now;
+    if(dt<400){acc+=dt;cnt++;}
+    if(cnt>=60){if(acc/cnt>24&&pr>.5){pr=Math.max(.5,pr*.8);fit();}acc=cnt=0;}   // celular fraco: reduz a resolução sozinho
+    const t=(now-t0)/1000,s=ST[state];
+    let k=0;if(!bs&&now>nb)bs=now;if(bs){const x=(now-bs)/180;if(x>=1){bs=0;nb=now+2500+Math.random()*3500;}else k=Math.sin(x*Math.PI);}
+    const tg=s.l+(state==='speaking'?.35*Math.abs(Math.sin(t*9)*Math.sin(t*3.7)):state==='listening'?.15*Math.abs(Math.sin(t*3)):state==='thinking'?.1*Math.sin(t*6):0);
+    lvl+=(tg-lvl)*.2;cp+=(s.p-cp)*.1;
+    for(let i=0;i<12;i++)cur_[i]+=(s.c[i]-cur_[i])*.08;
+    uni.uT.value=t;uni.uL.value=lvl;uni.uP.value=cp;uni.uK.value=k;
+    uni.uA.value.set(cur_[0],cur_[1],cur_[2]);uni.uB.value.set(cur_[3],cur_[4],cur_[5]);
+    uni.uC.value.set(cur_[6],cur_[7],cur_[8]);uni.uH.value.set(cur_[9],cur_[10],cur_[11]);
+    rdr.render(sc,cam);};
+  requestAnimationFrame(frame);
+}catch(e){noGL();}
+function setState(s){state=s;$('#st').textContent=LAB[s];$('#mic').classList.toggle('on',s==='listening');document.documentElement.style.setProperty('--ac',HEX[s]);}
+
+/* ---------- Conversas (salvas neste aparelho) ---------- */
+let chats=[];try{chats=JSON.parse(ls.get('chats')||'[]')}catch(e){}
+let cur=ls.get('cur');
+const act=()=>chats.find(c=>c.id===cur);
+const save=()=>ls.set('chats',JSON.stringify(chats.slice(0,60),(k,v)=>k==='i'?undefined:v));
+const sb=o=>{$('#sb').classList.toggle('o',o);$('#ov').classList.toggle('o',o);};
+function newChat(){const c={id:Date.now().toString(36),t:'Novo chat',ts:Date.now(),m:[]};chats.unshift(c);save();openChat(c.id);}
+function openChat(id){cur=id;ls.set('cur',id);render();sb(false);}
+function del(id){if(!confirm('Apagar esta conversa?'))return;chats=chats.filter(c=>c.id!==id);save();if(id===cur){chats.length?openChat(chats[0].id):newChat();}else list();}
+function list(){const L=$('#ls');L.innerHTML='';chats.forEach(c=>{
+  const d=document.createElement('div');d.className='ci'+(c.id===cur?' a':'');
+  const b=document.createElement('button');b.className='t';b.innerHTML='<span></span><small></small>';
+  b.firstChild.textContent=c.t;b.lastChild.textContent=new Date(c.ts).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})+', '+c.m.length+' mensagens';
+  b.onclick=()=>openChat(c.id);
+  const x=document.createElement('button');x.className='x';x.textContent='✕';x.setAttribute('aria-label','Apagar conversa');x.onclick=()=>del(c.id);
+  d.append(b,x);L.appendChild(d);});}
+function add(t,cls,img){const d=document.createElement('div');d.className='m '+cls;d.textContent=t;
+  if(img){const i=new Image();i.src=img;d.appendChild(i);}
+  const L=$('#log');L.appendChild(d);L.scrollTop=L.scrollHeight;return d;}
+function render(){const c=act();$('#log').innerHTML='';
+  c.m.forEach(x=>add(x.t+(x.g&&!x.i?'\n(a imagem não fica salva no histórico)':''),x.r==='u'?'u':'a',x.i));
+  if(!c.m.length)add(S.key?'Oi! Fale ou digite. Para criar imagens, peça algo como “gere uma imagem de…”.':'Olá! Toque em ⚙ e cole sua chave do Gemini. Depois é só falar ou digitar.','a');
+  $('#main').classList.toggle('has',c.m.length>0);list();}
+function put(c,r,t,g,i){const m={r,t};if(g)m.g=1;if(i)m.i=i;c.m.push(m);if(c.m.length>200)c.m.shift();
+  c.ts=Date.now();if(r==='u'&&c.t==='Novo chat')c.t=t.slice(0,36);save();
+  if(c.id===cur){add(t,r==='u'?'u':'a',i);$('#main').classList.add('has');}list();}
+function ctx(c){const o=[];for(const x of c.m){if(x.g)continue;const r=x.r==='u'?'user':'model',l=o[o.length-1];
+  if(l&&l.role===r)l.parts[0].text+='\n'+x.t;else o.push({role:r,parts:[{text:x.t}]});}
+  const s=o.slice(-10);while(s.length&&s[0].role!=='user')s.shift();return s;}
+$('#mn').onclick=()=>sb(true);$('#ov').onclick=()=>sb(false);
+$('#nc').onclick=()=>{if(act()&&!act().m.length){sb(false);return;}newChat();};
+
+/* ---------- Gemini (com tempo limite, nova tentativa e erros claros) ---------- */
+const API=m=>`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(m)}:generateContent`;
+const HTTP={401:'Chave não autorizada. Confira a chave em ⚙.',403:'Essa chave não tem permissão para este modelo. Gere outra no Google AI Studio.',404:'Modelo não encontrado. Confira o nome em ⚙.',429:'Limite de uso do Gemini atingido. Espere um minuto.'};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function call(model,body,n=0){
+  const ac=new AbortController(),to=setTimeout(()=>ac.abort(),50000);
+  try{
+    const r=await fetch(API(model),{method:'POST',signal:ac.signal,headers:{'Content-Type':'application/json','x-goog-api-key':S.key},body:JSON.stringify(body)});
+    let j={};try{j=await r.json()}catch(e){}
+    if(!r.ok){
+      if((r.status===429||r.status>=500)&&n<2){await sleep(1500*(n+1));return call(model,body,n+1);}
+      const m=j.error?.message||'';
+      const er=new Error(r.status===400?(/key/i.test(m)?'Chave inválida. Confira a chave em ⚙.':m||'Pedido recusado.'):HTTP[r.status]||m||('Erro '+r.status));er.code=r.status;throw er;}
+    return j;
+  }catch(e){
+    if(e.name==='AbortError')throw new Error('O Gemini demorou demais. Tente de novo.');
+    if(e instanceof TypeError){
+      if(n<1){await sleep(1200);return call(model,body,n+1);}
+      throw new Error(navigator.onLine?'Não consegui conectar ao Gemini. Se este arquivo está aberto dentro de um preview ou editor online, a rede costuma ser bloqueada: abra direto no Chrome. Desative VPN ou bloqueador e confira a chave em ⚙.':'Você está sem internet.');}
+    throw e;
+  }finally{clearTimeout(to);}}
+/* modelo desativado (404): descobre sozinho um modelo atual da sua chave, dando preferência ao Flash-Lite (mais rápido e barato) */
+const ver=n=>parseFloat((n.match(/(\d+(?:\.\d+)?)/)||[0,0])[1]);
+async function autoModel(img){
+  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200',{headers:{'x-goog-api-key':S.key}});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(j.error?.message||'Não consegui listar os modelos.');
+  const a=(j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent')).map(m=>m.name.replace('models/',''));
+  const im=n=>/image|banana/.test(n),bad=/tts|live|audio|embed|robot|computer|thinking|custom|omni|antigravity/;
+  const pool=img?a.filter(im):a.filter(n=>/^gemini-\d/.test(n)&&!im(n)&&!bad.test(n));
+  const rank=n=>(/flash-lite/.test(n)?2000:/flash/.test(n)?1000:0)+ver(n)*10-(/preview|exp/.test(n)?5:0);
+  return pool.sort((x,y)=>rank(y)-rank(x))[0]||'';}
+async function callM(img,body){
+  const k=img?'mi':'mc';
+  if(img&&!S.mi){S.mi=await autoModel(true);if(!S.mi)throw new Error('Nenhum modelo de imagem disponível para a sua chave.');ls.set('mi',S.mi);$('#mi').value=S.mi;}
+  try{return await call(S[k],body);}
+  catch(e){if(e.code!==404)throw e;
+    const m=await autoModel(img);if(!m||m===S[k])throw e;
+    S[k]=m;ls.set(k,m);$('#'+k).value=m;add('O modelo antigo saiu do ar. Troquei para '+m+'.','a');
+    return call(m,body);}}
+const IMG=/(gere|gerar|crie|criar|desenhe|desenhar|fa[çc]a)\b.{0,30}\b(imagem|foto|desenho|ilustra[çc][ãa]o|logo|wallpaper)/i;
+async function send(text){
+  text=text.trim();if(!text||state==='thinking')return;$('#tx').value='';
+  if(!S.key){add('Cole sua chave da API em ⚙ para começar.','a e');cfg(true);return;}
+  const c=act();put(c,'u',text);setState('thinking');const w=add('…','a');
+  try{
+    if(IMG.test(text)){
+      const j=await callM(true,{contents:[{parts:[{text}]}],generationConfig:{responseModalities:['TEXT','IMAGE']}});
+      const ps=j.candidates?.[0]?.content?.parts||[];
+      const im=ps.find(p=>p.inlineData||p.inline_data),tt=ps.filter(p=>p.text).map(p=>p.text).join(' ');
+      if(!im)throw new Error(tt||'O modelo não devolveu imagem.');
+      const d=im.inlineData||im.inline_data;
+      put(c,'a',tt||'Pronto, aqui está.',1,`data:${d.mimeType||d.mime_type};base64,${d.data}`);
+      setState('idle');if(on)listen();return;}
+    const body={tools:[{google_search:{}}],generationConfig:{maxOutputTokens:400},systemInstruction:{parts:[{text:`Agora é ${new Date().toLocaleString('pt-BR',{dateStyle:'full',timeStyle:'short'})}. Trate essa data e hora como as atuais e nunca cite outro ano como o atual. Seu conhecimento pode estar desatualizado sobre fatos recentes: avise quando não tiver certeza. Você é ${S.name}, um assistente de voz inteligente e direto. Responda em português do Brasil, em no máximo 2 frases curtas, de forma natural para ser falada. Evite listas e markdown.`}]},contents:ctx(c)};let j;try{j=await callM(false,body);}catch(e){if(e.code!==400)throw e;delete body.tools;j=await callM(false,body);}
+    const ans=(j.candidates?.[0]?.content?.parts||[]).filter(p=>!p.thought).map(p=>p.text||'').join('')||(j.promptFeedback?.blockReason?'O Gemini bloqueou esse pedido.':'Não consegui responder agora.');
+    put(c,'a',ans);speak(ans);
+  }catch(e){if(c.id===cur)add('Falhou: '+e.message,'a e');stop();}
+  finally{w.remove();}}
+
+/* ---------- Voz (conversa contínua) ---------- */
+let spk=null,on=false,wl=null;
+async function wake(o){try{if(o&&navigator.wakeLock&&!wl){wl=await navigator.wakeLock.request('screen');wl.onrelease=()=>wl=null;}else if(!o&&wl){wl.release();wl=null;}}catch(e){}}
+function speak(t){
+  if(!S.tt||!('speechSynthesis' in window)){setState('idle');if(on)listen();return;}
+  spk=null;speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(t.replace(/[*_#`]/g,''));u.lang='pt-BR';
+  const v=speechSynthesis.getVoices().find(v=>/^pt[-_]BR/i.test(v.lang));if(v)u.voice=v;
+  const end=()=>{if(spk!==u)return;spk=null;setState('idle');if(on)listen();};
+  u.onstart=()=>setState('speaking');u.onend=u.onerror=end;spk=u;speechSynthesis.speak(u);}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;
+function listen(){if(!rec||state==='thinking'||state==='speaking')return;try{rec.start();setState('listening');}catch(e){}}
+function stop(){on=false;wake(false);try{rec&&rec.stop();}catch(e){}if(state!=='thinking'||!spk)setState('idle');}
+if(SR){rec=new SR();rec.lang='pt-BR';rec.interimResults=true;
+  rec.onresult=e=>{let s='',fin=false;for(const r of e.results){s+=r[0].transcript;if(r.isFinal)fin=true;}
+    $('#tx').value=s;if(fin)send(s);};
+  rec.onend=()=>{if(state==='listening'){if(on)setTimeout(listen,300);else setState('idle');}};
+  rec.onerror=e=>{if(e.error==='no-speech'||e.error==='aborted')return;stop();add('Microfone: '+e.error+'. Verifique a permissão.','a e');};}
+$('#mic').onclick=()=>{
+  if(!rec){add('Este navegador não tem reconhecimento de voz. Use o Chrome ou digite.','a e');return;}
+  if(state==='listening'){stop();return;}
+  if(state==='speaking'){spk=null;speechSynthesis.cancel();setState('idle');}
+  on=S.ct;wake(on);listen();};
+$('#eye').onclick=()=>{if(state==='speaking'){speechSynthesis.cancel();}};
+$('#tx').addEventListener('keydown',e=>{if(e.key==='Enter')send(e.target.value);});
+$('#ct').onclick=()=>{S.ct=!S.ct;ls.set('ct',S.ct?'1':'0');if(!S.ct)on=false;apply();};
+
+/* ---------- Configurações ---------- */
+const apply=()=>{$('#nm').textContent=S.name;$('#ct').classList.toggle('on',S.ct);$('#ct').setAttribute('aria-pressed',S.ct);};
+const fill=()=>{$('#k').value=S.key;$('#n').value=S.name;$('#mc').value=S.mc;$('#mi').value=S.mi;$('#kc').checked=S.ct;$('#kt').checked=S.tt;$('#tm').textContent='';};
+function cfg(o){if(o)fill();$('#pn').classList.toggle('o',o);}
+function read(){S.key=$('#k').value.trim();S.name=$('#n').value.trim()||'Nova';S.mc=$('#mc').value.trim()||'gemini-3.1-flash-lite';S.mi=$('#mi').value.trim();S.ct=$('#kc').checked;S.tt=$('#kt').checked;
+  ls.set('k',S.key);ls.set('n',S.name);ls.set('mc',S.mc);ls.set('mi',S.mi);ls.set('ct',S.ct?'1':'0');ls.set('tt',S.tt?'1':'0');apply();}
+$('#cfg').onclick=()=>cfg(true);$('#xx').onclick=()=>cfg(false);
+$('#sv').onclick=()=>{read();cfg(false);if(!act().m.length)render();};
+$('#tt').onclick=async()=>{read();const o=$('#tm');if(!S.key){o.textContent='Cole a chave primeiro.';return;}
+  o.textContent='Testando…';
+  try{await callM(false,{contents:[{role:'user',parts:[{text:'Responda apenas: ok'}]}],generationConfig:{maxOutputTokens:10}});o.textContent='✓ Conectado ao Gemini ('+S.mc+').';}
+  catch(e){o.textContent='✗ '+e.message;}};
+
+apply();
+if(!act()&&chats.length)cur=chats[0].id;
+if(act())render();else newChat();
+if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
